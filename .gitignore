@@ -1,15 +1,15 @@
 .DS_Store
 .idea
 *.log
-tmp/
+synthesizer/tmp/
 \#*\#
 *~
 # sbt
 # (may want to keep parts of 'project')
-bin/
-project/
-target/
-build/
+synthesizer/bin/
+synthesizer/project/
+synthesizer/target/
+synthesizer/build/
 
 # intellij idea
 *.log
@@ -33,8 +33,8 @@ yarn.lock
 node_modules
 
 # Pyodide
-src/main/resources/static/pyodide/*
-!src/main/resources/static/pyodide/webworker.js
+vscode/src/main/resources/static/pyodide/*
+!vscode/src/main/resources/static/pyodide/webworker.js
 
 # Language server
 .bloop
@@ -42,21 +42,21 @@ src/main/resources/static/pyodide/*
 .cache
 npm-debug.log
 Thumbs.db
-node_modules/
-.build/
-extensions/**/dist/
-/out*/
-/extensions/**/out/
-build/node_modules
-coverage/
-test_data/
-test-results/
+vscode/node_modules/
+vscode/.build/
+vscode/extensions/**/dist/
+vscode/out*/
+vscode/extensions/**/out/
+vscode/build/node_modules
+vscode/coverage/
+vscode/test_data/
+vscode/test-results/
 yarn-error.log
 vscode.lsif
 vscode.db
-/.profile-oss
-/cli/target
-src/__pycache__
+vscode/.profile-oss
+vscode/cli/target
+vscode/src/__pycache__
 .idea
 *.iml
 *.out
