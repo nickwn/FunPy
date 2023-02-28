@@ -309,6 +309,8 @@ export class RTVSynthController {
 
 		// Update the projection box with the new value
 		const runResults: any = await this.RTVController.updateBoxes();
+		console.log('run results:');
+		console.log(runResults);
 
 		let error: any = runResults ? runResults[0] !== 0 : undefined;
 		if (error) {

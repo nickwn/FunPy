@@ -299,14 +299,21 @@ class Logger(bdb.Bdb):
 
 
 class WriteCollector(ast.NodeVisitor):
-	def __init__(self):
+	def __init__(self, lines):
 		ast.NodeVisitor()
+		self.lines = lines
 		self.data = {}
+		self.funs = {}
 
 	def data_at(self, l):
 		if not(l in self.data):
 			self.data[l] = []
 		return self.data[l]
+
+	def funs_at(self, l):
+		if not(l in self.funs):
+			self.funs[l] = {}
+		return self.funs[l]
 
 	def record_write(self, lineno, id):
 		if (id != magic_var_name):
@@ -325,6 +332,12 @@ class WriteCollector(ast.NodeVisitor):
 				print("Warning: did not find id in subscript")
 			else:
 				self.record_write(node.lineno, id)
+
+	def visit_FunctionDef(self, node):
+		fun = self.funs_at(node.lineno)
+		fun['name'] = node.name
+		fun['args'] = [a.arg for a in node.args.args]
+		fun['body'] = "".join(self.lines[node.lineno:node.end_lineno])
 
 	def find_id(self, node):
 		if hasattr(node, "id"):
@@ -358,14 +371,16 @@ def compute_writes(lines):
 		exception = e
 
 	writes = {}
+	funs = {}
 	if exception == None:
 		#print(ast.dump(root))
-		write_collector = WriteCollector()
+		write_collector = WriteCollector(lines)
 		write_collector.visit(root)
 		writes = write_collector.data
-	return (writes, exception)
+		funs = write_collector.funs
+	return (writes, funs, exception)
 
-def compute_runtime_data(lines, writes, values):
+def compute_runtime_data(lines, writes, funs, values):
 	exception = None
 	if len(lines) == 0:
 		return ({}, exception)
@@ -377,6 +392,15 @@ def compute_runtime_data(lines, writes, values):
 		exception = e
 	l.data = adjust_to_next_time_step(l.data, l.lines)
 	remove_frame_data(l.data)
+
+	for (env_lineno, env_data) in l.data.items():
+		if type(env_lineno) != int:
+			continue
+		
+		for (fun_lineno, fun_data) in funs.items():
+			if fun_lineno <= env_lineno:
+				env_data[0].update({'&' + fun_data['name']: fun_data})
+
 	return (l.data, exception)
 
 def adjust_to_next_time_step(data, lines):
@@ -426,12 +450,12 @@ def main(file, values_file = None):
 	return_code = 0
 	run_time_data = {}
 
-	(writes, exception) = compute_writes(lines)
+	(writes, funs, exception) = compute_writes(lines)
 
 	if exception != None:
 		return_code = 1
 	else:
-		(run_time_data, exception) = compute_runtime_data(lines, writes, values)
+		(run_time_data, exception) = compute_runtime_data(lines, writes, funs, values)
 		if (exception != None):
 			return_code = 2
 

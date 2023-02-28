@@ -780,7 +780,6 @@ export class RTVDisplayBox implements IRTVDisplayBox {
 		return envs.filter((e, i, a) => focusCtrl.matches(e['$'], e['#']));
 	}
 
-
 	private addCellContentAndStyle(cell: HTMLTableCellElement, elmt: TableElement, r: MarkdownRenderer) {
 		if (this._controller.colBorder || elmt.leftBorder) {
 			cell.style.borderLeft = '1px solid #454545';
@@ -1074,7 +1073,8 @@ export class RTVDisplayBox implements IRTVDisplayBox {
 					key !== 'lineno' &&
 					key !== 'time' &&
 					key !== '$' &&
-					key !== '#') {
+					key !== '#' &&
+					!key.startsWith('&')) {
 					this._allVars.add(key);
 				}
 			}
@@ -2774,6 +2774,9 @@ export class RTVController implements IRTVController {
 		}
 
 		this.logger.projectionBoxUpdateStart(program);
+
+		//console.log("program:");
+		//console.log(program);
 		this.pythonProcess = this.utils.runProgram(program, this.getCWD());
 
 		const runResults: RunResult = await this.pythonProcess;
