@@ -4,15 +4,18 @@ import edu.ucsd.snippy.DebugPrints
 import edu.ucsd.snippy.ast.Types.Types
 import edu.ucsd.snippy.enumeration.Contexts
 import scala.sys.process._
+import net.liftweb.json
+import net.liftweb.json.Formats
 import net.liftweb.json.JsonAST.JObject
 import net.liftweb.json.JsonParser
+import org.apache.commons.lang3.StringEscapeUtils;
 
 case class Call(name: String, args: List[ASTNode], contexts: List[Map[String, Any]]) extends ASTNode
 {
 	override val height: Int = 1 + args.map(a => a.height).max // todo: fails on corner case when arity=0
 	override val terms: Int = 1 + args.foldLeft(0)((acc, a) => acc + a.terms)
 	override val children: Iterable[ASTNode] = args
-	override lazy val usesVariables: Boolean = args.foldLeft(false)((acc, a) => acc || a.usesVariables)
+	override lazy val usesVariables: Boolean = true
 	override protected val parenless: Boolean = false
 	override val nodeType: Types = Types.Any
 	override lazy val code: String = s"$name(${args.map(a => a.code).mkString(", ")})"
@@ -28,44 +31,46 @@ case class Call(name: String, args: List[ASTNode], contexts: List[Map[String, An
 
 		val stdout = scala.sys.process.stdout
 
+		val argStrs = args.map(a => json.Serialization.write(a)(json.DefaultFormats))
+
 		val source = s"""
 		|import json
 		|def $name(${params.mkString(", ")}):
-		|	$body
+		|$body
 		|
-		|res = $name(${args.mkString(", ")})
+		|res = $name(${argStrs.mkString(", ")})
 		|res_json = json.dumps(res)
-		|print(res_json)
-		""".stripMargin
+		|print(res_json)""".stripMargin
 
-		var cmd = ""
+		val cmd = s"python3 -c \'$source\'"
+
+		var resJson = ""
 		try {
-			cmd = s"python3 -c \"$source\""
+			resJson = cmd.!!
 		} catch {
-			case e: RuntimeException => return None
+			case e: RuntimeException => {
+				return None
+			}
+			return None
 		}
 
-		val resJson = cmd.!!
-		val res = JsonParser.parse(resJson).asInstanceOf[JObject].values
-
-		//stdout.println(source)
-		//stdout.println(res)
+		val res = JsonParser.parse(resJson).values
 		return Some(res)
 	}
 
 	override val values: List[Option[Any]] = {
 		val stdout = scala.sys.process.stdout
-		//stdout.println("values!!!")
 		contexts.zip(args.map(a => a.values.toArray).toArray.transpose.toList)
 			.map((contextMaybeArgValues) => {
 				val context = contextMaybeArgValues._1
 				val maybeArgValues = contextMaybeArgValues._2
-				val maybeDef = context.get(name).asInstanceOf[Option[Map[String, Any]]]
+				val maybeDef = context.get("&" + name).asInstanceOf[Option[Map[String, Any]]]
 				val argValues = maybeArgValues.toList.flatten[Any]
-				if (argValues.length == maybeArgValues.length && maybeDef.nonEmpty) 
+				if (argValues.length == maybeArgValues.length) {
 					this.evaluate(argValues, maybeDef.get)
-				else 
+				} else {
 					None
+				}
 			})
 	}
 

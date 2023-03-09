@@ -120,7 +120,6 @@ object SynthesisTask
 				val enumerator = new enumeration.ProbEnumerator(vocab, oeManager, contexts, false, 0, bank, mini, 100)
 				new ConditionalSingleEnumSingleVarSolutionEnumerator(enumerator, pred.varName, pred.retType, pred.values, contexts)
 			case _ =>
-				stdout.println("basic enumerator")
 				val enumerator = new BasicEnumerator(vocab, oeManager, contexts)
 				new BasicSolutionEnumerator(predicate, enumerator)
 		}

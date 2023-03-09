@@ -131,6 +131,7 @@ class ProbEnumerator(
 	var progs = 0
 	def getNextProgram: Option[ASTNode] =
 	{
+		val stdout = scala.sys.process.stdout
 		var res: Option[ASTNode] = None
 		// Iterate while no non-equivalent program is found
 		while (res.isEmpty) {
@@ -138,6 +139,7 @@ class ProbEnumerator(
 
 			if (rootMaker.hasNext) {
 				val program = rootMaker.next
+
 				if (program.values.exists(_.isDefined) && oeManager.isRepresentative(program)) {
 					res = Some(program)
 					progs += 1

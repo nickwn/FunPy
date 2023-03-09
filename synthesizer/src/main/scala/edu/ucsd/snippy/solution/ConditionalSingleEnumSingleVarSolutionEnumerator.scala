@@ -30,6 +30,10 @@ class ConditionalSingleEnumSingleVarSolutionEnumerator(
 
 	override def step(): Unit = {
 		val program = enumerator.next()
+
+		val stdout = scala.sys.process.stdout
+		//stdout.println(program)
+
 		val paths = for (((thenPart, elsePart), store) <- stores) yield {
 			var updated = false
 

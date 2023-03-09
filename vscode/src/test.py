@@ -1,9 +1,10 @@
-def test(x):
-    return x + " says hi"
+def abbrev_year(s):
+    res = "+" + s[2:4]
+    return res
 
-def abbreviate(name):
-    i = 3
-    abbr = 0
-    return abbr
+def abbreviate(y):
+    s = str(y)
+    res = 0
+    return res
 
-abbreviate('Nick Rebel')
+abbreviate(2023)
