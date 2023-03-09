@@ -1,5 +1,5 @@
 def abbrev_year(s):
-    res = "+" + s[2:4]
+    res = "\'" + s[2:4]
     return res
 
 def abbreviate(y):
