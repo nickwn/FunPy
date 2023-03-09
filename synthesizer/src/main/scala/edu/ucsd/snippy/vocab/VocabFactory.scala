@@ -26,6 +26,7 @@ object VocabFactory
 		val defaultStringLiterals = List(" ")
 		val defaultIntLiterals = List(-1, 0, 1, 2)
 		val stringLiterals = (defaultStringLiterals ++ additionalLiterals).distinct
+		val stdout = scala.sys.process.stdout
 
 		val vocab: List[VocabMaker] = {
 			// First, add the variables
@@ -102,6 +103,17 @@ object VocabFactory
 
 					override def apply(children: List[ASTNode], contexts: List[Map[String, Any]]): ASTNode =
 						SetVariable(name, contexts, childType)
+				}
+				case (name, Types.Function(funArity)) => new BasicVocabMaker {
+					override val arity: Int = funArity
+					override val childTypes: List[Types] = List.fill(funArity)(Types.Any)
+					override val returnType: Types = Types.Any
+					override val nodeType: Class[_ <: ASTNode] = classOf[Call]
+					override val head: String = ""
+
+					override def apply(children: List[ASTNode], contexts: List[Map[String, Any]]): ASTNode = {
+						Call(name.substring(1), children, contexts)
+					}
 				}
 				case (name, typ) =>
 					assert(assertion = false, s"Input type $typ not supported for input $name")

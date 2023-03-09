@@ -86,6 +86,7 @@ object Snippy extends App
 
 				breakable {
 					for (solution <- task.enumerator) {
+						//stdout.println(solution)
 						solution match {
 							case Some(assignment) =>
 								code = Some(assignment.code())

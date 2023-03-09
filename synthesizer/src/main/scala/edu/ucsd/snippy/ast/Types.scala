@@ -56,6 +56,19 @@ object Types extends Enumeration
 		override def toString(): String = s"Map[$keyType,$valType]"
 	}
 
+	case class Function(arity: Int) extends super.Val
+	{
+		override def canEqual(that: Any): Boolean = this.equals(that)
+
+		override def equals(that: Any): Boolean =
+			that match {
+				case that: Types.Function => that.arity == this.arity
+				case _ => false
+			}
+
+		override def toString(): String = s"Function($arity)"
+	}
+
 	case object Any extends super.Val
 	{
 		override def canEqual(that: Any): Boolean = this.equals(that)

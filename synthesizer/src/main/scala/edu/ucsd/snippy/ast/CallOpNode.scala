@@ -3,38 +3,74 @@ package edu.ucsd.snippy.ast
 import edu.ucsd.snippy.DebugPrints
 import edu.ucsd.snippy.ast.Types.Types
 import edu.ucsd.snippy.enumeration.Contexts
+import scala.sys.process._
+import net.liftweb.json.JsonAST.JObject
+import net.liftweb.json.JsonParser
 
-case class Call(name: String, args: List[ASTNode]) extends ASTNode
+case class Call(name: String, args: List[ASTNode], contexts: List[Map[String, Any]]) extends ASTNode
 {
-	override val height: Int = 1 + args.map(a=> a.height).max
-	override val terms: Int = 1 + args.foldLeft(0)((acc, arg) => acc + arg.terms)
+	override val height: Int = 1 + args.map(a => a.height).max // todo: fails on corner case when arity=0
+	override val terms: Int = 1 + args.foldLeft(0)((acc, a) => acc + a.terms)
 	override val children: Iterable[ASTNode] = args
-	override lazy val usesVariables: Boolean = args.foldLeft(false)((acc, arg) => acc || arg.usesVariables)
+	override lazy val usesVariables: Boolean = args.foldLeft(false)((acc, a) => acc || a.usesVariables)
 	override protected val parenless: Boolean = false
 	override val nodeType: Types = Types.Any
-	override lazy val code: String = args.map(a => a.code).mkString(name + "(", ", ", ")")
+	override lazy val code: String = s"$name(${args.map(a => a.code).mkString(", ")})"
 
 	// TODO: rewrite this assertion
 	//if (lhs.values.length != rhs.values.length) println(lhs.code, lhs.values, rhs.code, rhs.values)
 	//assert(lhs.values.length == rhs.values.length)
 
 	// TODO: implement
-	def doOp(args: List[Any]): Option[Any] = None  //{
-		//case (l: Int, r: Int) => Some(l + r)
-		//case _ => wrongType(l, r)
-	//}
+	def evaluate(args: List[Any], funDef: Map[String, Any]): Option[Any] = {
+		val params = funDef("args").asInstanceOf[List[String]] // todo: change to params
+		val body = funDef("body").asInstanceOf[String]
 
-	override val values: List[Option[Any]] = args.map(a => a.values.toArray)
-		.toArray.transpose.toList.map(maybeArgValues => {
-			val argValues = maybeArgValues.toList.flatten[Any]
-			if (argValues.length == maybeArgValues.length) 
-				this.doOp(argValues)
-			else 
-				None
-		})
+		val stdout = scala.sys.process.stdout
 
-	def includes(varName: String): Boolean = args.foldLeft(false)((acc, arg) => 
-		acc || arg.includes(varName)
+		val source = s"""
+		|import json
+		|def $name(${params.mkString(", ")}):
+		|	$body
+		|
+		|res = $name(${args.mkString(", ")})
+		|res_json = json.dumps(res)
+		|print(res_json)
+		""".stripMargin
+
+		var cmd = ""
+		try {
+			cmd = s"python3 -c \"$source\""
+		} catch {
+			case e: RuntimeException => return None
+		}
+
+		val resJson = cmd.!!
+		val res = JsonParser.parse(resJson).asInstanceOf[JObject].values
+
+		//stdout.println(source)
+		//stdout.println(res)
+		return Some(res)
+	}
+
+	override val values: List[Option[Any]] = {
+		val stdout = scala.sys.process.stdout
+		//stdout.println("values!!!")
+		contexts.zip(args.map(a => a.values.toArray).toArray.transpose.toList)
+			.map((contextMaybeArgValues) => {
+				val context = contextMaybeArgValues._1
+				val maybeArgValues = contextMaybeArgValues._2
+				val maybeDef = context.get(name).asInstanceOf[Option[Map[String, Any]]]
+				val argValues = maybeArgValues.toList.flatten[Any]
+				if (argValues.length == maybeArgValues.length && maybeDef.nonEmpty) 
+					this.evaluate(argValues, maybeDef.get)
+				else 
+					None
+			})
+	}
+
+	def includes(varName: String): Boolean = args.foldLeft(false)((acc, a) => 
+		acc || a.includes(varName)
 	)
 
 	protected def wrongType(args: List[Any]): Option[Any] =

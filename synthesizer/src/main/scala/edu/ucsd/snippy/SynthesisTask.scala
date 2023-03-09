@@ -91,9 +91,22 @@ object SynthesisTask
 
 		val parameters = contexts.flatMap(_.keys)
 			.toSet[String]
-			.map(varName => varName -> Utils.getTypeOfAll(contexts.map(ex => ex.get(varName)).filter(_.isDefined).map(_.get)))
+			.map(varName => 
+				if (varName.startsWith("&")) {
+					varName -> Types.Function(contexts.map(ex => 
+						ex.get(varName)).filter(_.isDefined).map(_.get).head
+							.asInstanceOf[Map[String, Any]]("args").asInstanceOf[List[String]].length
+					)
+				} else {
+					varName -> Utils.getTypeOfAll(contexts.map(ex => ex.get(varName)).filter(_.isDefined).map(_.get))
+				}
+			)
 			.filter(!_._2.equals(Types.Unknown))
-			.toList
+			.toList	
+
+		val stdout = scala.sys.process.stdout
+		//stdout.println(parameters)
+
 		val vocab: VocabFactory = VocabFactory(parameters, additionalLiterals)
 
 		val enumerator: SolutionEnumerator = predicate match {
@@ -107,6 +120,7 @@ object SynthesisTask
 				val enumerator = new enumeration.ProbEnumerator(vocab, oeManager, contexts, false, 0, bank, mini, 100)
 				new ConditionalSingleEnumSingleVarSolutionEnumerator(enumerator, pred.varName, pred.retType, pred.values, contexts)
 			case _ =>
+				stdout.println("basic enumerator")
 				val enumerator = new BasicEnumerator(vocab, oeManager, contexts)
 				new BasicSolutionEnumerator(predicate, enumerator)
 		}
@@ -197,7 +211,7 @@ object SynthesisTask
 	def cleanupInputs(input: Map[String, Any]): Map[String, Any] =
 	{
 		val parser = new InputParser
-		input
+		val varInputs = input
 			.filter(v => !reserved_names.contains(v._1))
 			// TODO Is there a cleaner way to do this?
 			.filter(_._2.isInstanceOf[String])
@@ -209,6 +223,11 @@ object SynthesisTask
 					(variable._1, v)
 			})
 			.filter(v => v._2 != null)
+
+		val funInputs = input
+			.filter(_._2.isInstanceOf[Map[String, Any]])
+
+		varInputs ++ funInputs
 	}
 
 	private def enumerateEnvs(
