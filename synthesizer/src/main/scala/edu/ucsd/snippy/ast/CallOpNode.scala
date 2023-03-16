@@ -28,72 +28,72 @@ case class Call(name: String, args: List[ASTNode], contexts: List[Map[String, An
 	//assert(lhs.values.length == rhs.values.length)
 
 	// TODO: implement
-	// def evaluate(args: List[Any], funDef: Map[String, Any]): Option[Any] = {
-	// 	val params = funDef("args").asInstanceOf[List[String]] // todo: change to params
-	// 	val body = funDef("body").asInstanceOf[String]
-
-	// 	val stdout = scala.sys.process.stdout
-
-	// 	val argStrs = args.map(a => json.Serialization.write(a)(json.DefaultFormats))
-
-	// 	val source = s"""
-	// 	|import json
-	// 	|def $name(${params.mkString(", ")}):
-	// 	|$body
-	// 	|
-	// 	|res = $name(${argStrs.mkString(", ")})
-	// 	|res_json = json.dumps(res)
-	// 	|print(res_json)""".stripMargin
-
-	// 	val cmd = s"python3 -c \'$source\'"
-
-	// 	var resJson = ""
-	// 	try {
-	// 		resJson = cmd.!!
-	// 	} catch {
-	// 		case e: RuntimeException => {
-	// 			return None
-	// 		}
-	// 		return None
-	// 	}
-
-	// 	val res = JsonParser.parse(resJson).values
-	// 	return Some(res)
-	// }
-
 	def evaluate(args: List[Any], funDef: Map[String, Any]): Option[Any] = {
-		// Todo: get the cmd as a string 
-		// val argStrs = args.map(a => json.Serialization.write(a)(json.DefaultFormats))
-		val path = "/home/nick/LooPy/synthesizer/src/"
-		// s"$name(${argStrs.mkString(', ')}"
-		
-		val iofile = new File(s"$path/iofile.txt")
-		val iofilewriter = new PrintWriter(iofile)
+		val params = funDef("args").asInstanceOf[List[String]] // todo: change to params
+		val body = funDef("body").asInstanceOf[String]
+
+		val stdout = scala.sys.process.stdout
 
 		val argStrs = args.map(a => json.Serialization.write(a)(json.DefaultFormats))
-		val cmd = s"$name(${argStrs.mkString(", ")})"
-		iofilewriter.write(cmd)
-		iofilewriter.close()
 
-		val lockfile = new File(s"$path/lockfile.txt")
-		val lockfilewriter = new PrintWriter(lockfile)
+		val source = s"""
+		|import json
+		|def $name(${params.mkString(", ")}):
+		|$body
+		|
+		|res = $name(${argStrs.mkString(", ")})
+		|res_json = json.dumps(res)
+		|print(res_json)""".stripMargin
 
-		lockfilewriter.write("1")
-		lockfilewriter.close()
-		
-		var cond = true
-		while(cond){
-			val lock = Source.fromFile(s"$path/lockfile.txt").mkString
+		val cmd = s"python3 -c \'$source\'"
 
-			if(lock.length()==1){
-				if(lock.toInt==0)
-					cond = false
+		var resJson = ""
+		try {
+			resJson = cmd.!!
+		} catch {
+			case e: RuntimeException => {
+				return None
 			}
+			return None
 		}
-		val result = Source.fromFile(s"$path/iofile.txt").mkString
 
-		return Some(JsonParser.parse(result).values)
+		val res = JsonParser.parse(resJson).values
+		return Some(res)
 	}
+
+	// def evaluate(args: List[Any], funDef: Map[String, Any]): Option[Any] = {
+	// 	// Todo: get the cmd as a string 
+	// 	// val argStrs = args.map(a => json.Serialization.write(a)(json.DefaultFormats))
+	// 	val path = "/home/nick/LooPy/synthesizer/src/"
+	// 	// s"$name(${argStrs.mkString(', ')}"
+		
+	// 	val iofile = new File(s"$path/iofile.txt")
+	// 	val iofilewriter = new PrintWriter(iofile)
+
+	// 	val argStrs = args.map(a => json.Serialization.write(a)(json.DefaultFormats))
+	// 	val cmd = s"$name(${argStrs.mkString(", ")})"
+	// 	iofilewriter.write(cmd)
+	// 	iofilewriter.close()
+
+	// 	val lockfile = new File(s"$path/lockfile.txt")
+	// 	val lockfilewriter = new PrintWriter(lockfile)
+
+	// 	lockfilewriter.write("1")
+	// 	lockfilewriter.close()
+		
+	// 	var cond = true
+	// 	while(cond){
+	// 		val lock = Source.fromFile(s"$path/lockfile.txt").mkString
+
+	// 		if(lock.length()==1){
+	// 			if(lock.toInt==0)
+	// 				cond = false
+	// 		}
+	// 	}
+	// 	val result = Source.fromFile(s"$path/iofile.txt").mkString
+
+	// 	return Some(JsonParser.parse(result).values)
+	// }
 
 
 	override val values: List[Option[Any]] = {

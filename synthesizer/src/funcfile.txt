@@ -1,0 +1,6 @@
+
+import json
+def abbrev_year(s):
+    res = "\'" + s[2:4]
+    return res
+

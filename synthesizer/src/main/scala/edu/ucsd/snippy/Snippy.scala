@@ -128,16 +128,16 @@ object Snippy extends App
 //				.foreach(bench => synthesize(bench, 1))
 //		}
 
-	val path = "/home/nick/LooPy/synthesizer/src/"
-	val lockfile = new File(s"$path/lockfile.txt")
-	val lockfilewriter = new PrintWriter(lockfile)
+	// val path = "/home/nick/LooPy/synthesizer/src/"
+	// val lockfile = new File(s"$path/lockfile.txt")
+	// val lockfilewriter = new PrintWriter(lockfile)
 	
-	lockfilewriter.write("0")
-	lockfilewriter.close()
+	// lockfilewriter.write("0")
+	// lockfilewriter.close()
 	
-	// Create interpreter process
+	// // Create interpreter process
 	
-	val pythonInterpreter = Process(s"python3 $path/Interpreter.py $path/funcfile.txt $path/iofile.txt $path/lockfile.txt").run()
+	// val pythonInterpreter = Process(s"python3 $path/Interpreter.py $path/funcfile.txt $path/iofile.txt $path/lockfile.txt").run()
 	
 	// evaluate("sum1(15)")
 	// evaluate("sum1(89)")
@@ -176,5 +176,5 @@ object Snippy extends App
 	}
 
 	//At the end, before returning result to vscode
-	pythonInterpreter.destroy()
+	//pythonInterpreter.destroy()
 }

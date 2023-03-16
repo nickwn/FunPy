@@ -8,6 +8,8 @@ import edu.ucsd.snippy.utils._
 import edu.ucsd.snippy.vocab._
 import net.liftweb.json.JsonAST.JObject
 import net.liftweb.json.JsonParser
+import java.io.File
+import java.io.PrintWriter
 
 import scala.collection.mutable
 
@@ -106,6 +108,28 @@ object SynthesisTask
 
 		val stdout = scala.sys.process.stdout
 		//stdout.println(parameters)
+
+		// val path = "/home/nick/LooPy/synthesizer/src/"
+		// val funcfile = new File(s"$path/funcfile.txt")
+		// val funcfilewriter = new PrintWriter(funcfile)
+
+		// val funsStr = contexts.map(context => {
+		// 	context.filterKeys(_.startsWith("&")).map(kv => {
+		// 		val definition = kv._2.asInstanceOf[Map[String, Any]]
+		// 		val name = definition("name").asInstanceOf[String]
+		// 		val params = definition("args").asInstanceOf[List[String]]
+		// 		val body = definition("body").asInstanceOf[String]
+
+		// 		s"""
+		// 		|def $name(${params.mkString(", ")}):
+		// 		|$body
+		// 		|""".stripMargin
+		// 	}).mkString("\n")
+		// }).mkString("\n")
+
+		// stdout.println(funsStr)
+		// funcfilewriter.write(funsStr)
+		// funcfilewriter.close()
 
 		val vocab: VocabFactory = VocabFactory(parameters, additionalLiterals)
 
