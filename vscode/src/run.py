@@ -334,7 +334,7 @@ class WriteCollector(ast.NodeVisitor):
 				self.record_write(node.lineno, id)
 
 	def visit_FunctionDef(self, node):
-		fun = self.funs_at(node.lineno)
+		fun = self.funs_at(node.end_lineno)
 		fun['name'] = node.name
 		fun['args'] = [a.arg for a in node.args.args]
 		fun['body'] = "".join(self.lines[node.lineno:node.end_lineno])

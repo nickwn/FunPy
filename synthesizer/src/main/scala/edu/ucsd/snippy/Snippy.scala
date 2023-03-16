@@ -9,11 +9,14 @@ import java.io.File
 import scala.concurrent.duration._
 import scala.io.Source.fromFile
 import scala.io.StdIn
+import scala.sys.process.Process
 import scala.sys.process.stderr
 import scala.tools.nsc.io.JFile
 import scala.util.control.Breaks._
 import java.io.BufferedWriter
 import java.io.FileWriter
+import java.io.PrintWriter
+
 
 class SynthResult(
 	val id: Int,
@@ -125,6 +128,21 @@ object Snippy extends App
 //				.foreach(bench => synthesize(bench, 1))
 //		}
 
+	val path = "/home/nick/LooPy/synthesizer/src/"
+	val lockfile = new File(s"$path/lockfile.txt")
+	val lockfilewriter = new PrintWriter(lockfile)
+	
+	lockfilewriter.write("0")
+	lockfilewriter.close()
+	
+	// Create interpreter process
+	
+	val pythonInterpreter = Process(s"python3 $path/Interpreter.py $path/funcfile.txt $path/iofile.txt $path/lockfile.txt").run()
+	
+	// evaluate("sum1(15)")
+	// evaluate("sum1(89)")
+	// evaluate("sum1(-23)")
+
 	if (args.isEmpty) {
 		while (true) synthesizeIO()
 	} else {
@@ -156,4 +174,7 @@ object Snippy extends App
 			println(f"[?] [$count%d] [${time / 1000.0}%1.3f]\n$program")
 		}
 	}
+
+	//At the end, before returning result to vscode
+	pythonInterpreter.destroy()
 }
