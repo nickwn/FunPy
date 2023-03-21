@@ -32,6 +32,15 @@ trait ASTNode
 	}
 
 	def updateValues(contexts: Contexts): ASTNode
+
+	def asInstanceOfIterable: IterableNode = this.asInstanceOf[IterableNode]
+	def asInstanceOfString: StringNode = this.asInstanceOf[StringNode]
+	def asInstanceOfBool: BoolNode = this.asInstanceOf[BoolNode]
+	def asInstanceOfInt: IntNode = this.asInstanceOf[IntNode]
+	def asInstanceOfDouble: DoubleNode = this.asInstanceOf[DoubleNode]
+	def asInstanceOfList[V]: ListNode[V] = this.asInstanceOf[ListNode[V]]
+	def asInstanceOfMap[K, V]: MapNode[K, V] = this.asInstanceOf[MapNode[K, V]]
+	def asInstanceOfSet[V]: SetNode[V] = this.asInstanceOf[SetNode[V]]
 }
 
 trait IterableNode extends ASTNode

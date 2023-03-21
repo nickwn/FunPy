@@ -45,6 +45,7 @@ object Snippy extends App
 
 	def synthesize(task: SynthesisTask, timeout: Int) : (Option[String], Int, Int) =
 	{
+		val stdout = scala.sys.process.stdout
 		// If the environment is empty, we might go into an infinite loop :/
 		if (!task.contexts.exists(_.nonEmpty)) {
 			return (Some("None"), 0, 0)
@@ -53,21 +54,26 @@ object Snippy extends App
 		var rs: (Option[String], Int, Int) = (None, -1, 0)
 		val deadline = timeout.seconds.fromNow
 
-		breakable {
-			for (solution <- task.enumerator) {
-				solution match {
-					case Some(assignment) =>
-						rs = (Some(assignment.code()), timeout * 1000 - deadline.timeLeft.toMillis.toInt, task.enumerator.programsSeen)
-						break
-					case _ => ()
-				}
+			breakable {
+				for (solution <- task.enumerator) {
+					solution match {
+						case Some(assignment) =>
+							stdout.println(assignment.code)
+							rs = (Some(assignment.code()), timeout * 1000 - deadline.timeLeft.toMillis.toInt, task.enumerator.programsSeen)
+							break
+						case _ => ()
+					}
 
-				if (!deadline.hasTimeLeft) {
-					rs = (None, timeout * 1000 - deadline.timeLeft.toMillis.toInt, task.enumerator.programsSeen)
-					break
+					if (!deadline.hasTimeLeft) {
+						rs = (None, timeout * 1000 - deadline.timeLeft.toMillis.toInt, task.enumerator.programsSeen)
+						//stdout.println("hit deadline")
+						break
+					}
 				}
+				//stdout.println("no break")
 			}
-		}
+
+		//stdout.println("done")
 
 		rs
 	}
@@ -77,12 +83,14 @@ object Snippy extends App
 		val stdin = scala.sys.process.stdin
 		var code: Option[String] = None
 
+		var id = 0
 		try {
 			// TODO What is this?
 			implicit val formats: Formats = json.DefaultFormats
 
 			val taskStr = StdIn.readLine()
 			val task = SynthesisTask.fromString(taskStr)
+			id = task.id
 
 			if (task.contexts.exists(_.nonEmpty)) {
 				val deadline = timeout.seconds.fromNow
@@ -107,7 +115,7 @@ object Snippy extends App
 			case e: Throwable => stderr.println(e.toString)
 		}
 
-		val solution = new SynthResult(0, code.isDefined, code)
+		val solution = new SynthResult(id, code.isDefined, code)
 		stdout.println(json.Serialization.write(solution)(json.DefaultFormats))
 		stdout.flush()
 		System.gc()

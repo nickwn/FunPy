@@ -23,7 +23,8 @@ class SynthesisTask(
 
 	// Synthesizer state
 	val oeManager : OEValuesManager,
-	val enumerator: SolutionEnumerator)
+	val enumerator: SolutionEnumerator,
+	val id: Int)
 {
 	override def toString: String =
 	{
@@ -45,6 +46,7 @@ object SynthesisTask
 		val outputVarNames: List[String] = input("varNames").asInstanceOf[List[String]]
 		val envs: List[Map[String, Any]] = input("envs").asInstanceOf[List[Map[String, Any]]]
 		val previousEnvMap: Map[Int, Map[String, Any]] = input("previousEnvs").asInstanceOf[Map[String, Map[String, Any]]].map(tup => tup._1.toInt -> tup._2)
+		val id = input("id").asInstanceOf[BigInt].toInt
 
 		// First, build a tuple of (prevEnv, env) for all the envs
 		val allEnvs: List[(Option[Map[String, Any]], Map[String, Any])] = envs.map(env =>
@@ -155,7 +157,8 @@ object SynthesisTask
 			contexts,
 			predicate,
 			oeManager,
-			enumerator)
+			enumerator,
+			id)
 	}
 
 

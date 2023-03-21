@@ -2,6 +2,8 @@ package edu.ucsd.snippy.enumeration
 
 import edu.ucsd.snippy.ast.ASTNode
 import edu.ucsd.snippy.ast.Types.Types
+import edu.ucsd.snippy.ast.Types
+import edu.ucsd.snippy.utils._
 
 import scala.collection.mutable
 
@@ -17,7 +19,22 @@ class ProbChildrenIterator(val childTypes: List[Types], val childrenCost: Int, v
 
 	def resetIterators(cost: Array[Int]): Unit =
 	{
-		childrenLists = childTypes.zip(cost).map { case (t, c) => bank(c).view.filter(c => t.equals(c.nodeType)).toList }
+		val stdout = scala.sys.process.stdout
+		//stdout.println("children")
+		childrenLists = childTypes.zip(cost).map { 
+			case (t, c) => bank(c).view.filter(
+				c => (t.equals(c.nodeType) || t.equals(Types.typeof(c.values.head.get)))
+			).toList 
+		}
+		// for (c <- cost) {
+		// 	for (n <- bank(c).view) {
+		// 		stdout.println(n.code)
+		// 		stdout.println(Types.typeof(n.values.head.get))
+		// 	}
+		// }
+		// stdout.println("children end")
+
+
 		candidates = if (childrenLists.exists(l => l.isEmpty)) {
 			childrenLists.map(_ => Iterator.empty).toArray
 		} else {
@@ -57,8 +74,10 @@ class ProbChildrenIterator(val childTypes: List[Types], val childrenCost: Int, v
 
 	def getChild(): Unit =
 	{
+		val stdout = scala.sys.process.stdout
 		next_child = None
 		while (next_child.isEmpty) {
+			//stdout.println("loop1")
 			next_child = getNextChild()
 			if (next_child.isEmpty) {
 				if (!costsIterator.hasNext) return

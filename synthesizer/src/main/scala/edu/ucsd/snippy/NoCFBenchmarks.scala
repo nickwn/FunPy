@@ -148,7 +148,8 @@ object NoCFBenchmarks extends App
 			contexts,
 			predicate,
 			oeManager,
-			enum)
+			enum,
+			0)
 		val name = file.getParentFile.getName + "/" + file.getName
 		Snippy.synthesize(sTask, timeout) match {
 			case (None, time: Int, count: Int) =>
